@@ -129,3 +129,32 @@ upgrade_settings {
 After initial provisioning, always run `terraform plan` and review any drift
 before committing code. Azure services often auto-apply defaults that aren't
 in your Terraform config, causing state drift that should be explicitly locked in.
+
+## Issue 5 — PodNotRunning alert failed to fire when deployment was deleted
+
+**Date:** 2026-06-14
+**Severity:** Medium
+**Phase:** Phase 3 — Prometheus alerting rules
+
+### Symptom
+Deleted the nginx-test deployment to trigger the PodNotRunning alert. Alert
+remained Inactive despite no pods running in the default namespace.
+
+### Root Cause
+The original alert expression was:
+`kube_pod_status_phase{namespace="default", phase="Running"} == 0`
+When a deployment is deleted entirely, kube-state-metrics stops exporting
+the metric series for those pods. There is no series with value 0 — there
+is no series at all. A PromQL expression that filters on a non-existent
+series returns empty, not false, so the alert never evaluates to true.
+
+### Resolution
+Replaced the expression with absent():
+`absent(kube_pod_status_phase{namespace="default", phase="Running"})`
+absent() returns 1 when the metric series does not exist, correctly
+detecting both crashed pods and fully deleted deployments.
+
+### Prevention
+When writing alerts for workload presence, always use absent() rather than
+== 0. Reserve == 0 for metrics that always exist but report a zero value
+(counters, gauges). Use absent() when the series itself may disappear.

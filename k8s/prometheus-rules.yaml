@@ -1,0 +1,39 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aks-lab-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: node.rules
+      rules:
+        - alert: NodeHighCPU
+          expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node CPU usage is above 80%"
+            description: "Node CPU has been above 80% for more than 2 minutes."
+
+        - alert: NodeHighMemory
+          expr: 100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 85
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node memory usage is above 85%"
+            description: "Node memory has been above 85% for more than 2 minutes."
+
+    - name: pod.rules
+      rules:
+        - alert: PodNotRunning
+          expr: absent(kube_pod_status_phase{namespace="default", phase="Running"})
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "No running pods in default namespace"
+            description: "No pods are in Running phase in the default namespace for 1 minute."
