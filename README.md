@@ -20,46 +20,29 @@ Deploys a fully instrumented observability stack on Azure Kubernetes Service:
 ---
 
 ## Architecture
+
+```
 Custom Python App (FastAPI)
-
-│
-
-│ /metrics endpoint
-
-▼
-
+        │
+        │ /metrics endpoint
+        ▼
 ServiceMonitor (Kubernetes CRD)
-
-│
-
-│ tells Prometheus operator to scrape
-
-▼
-
+        │
+        │ tells Prometheus operator to scrape
+        ▼
 Prometheus (in-cluster)
-
-│
-
-├── Evaluates PrometheusRule alerts
-
-│   └── NodeHighCPU, NodeHighMemory, PodNotRunning
-
-│
-
-└── Data source for Grafana
-
-│
-
-├── AKS Cluster Health Dashboard
-
-│   └── Running pods, CPU %, Memory %
-
-│
-
-└── Application Performance Dashboard
-
-└── Request rate, Error rate %, p95 latency
-
+        │
+        ├── Evaluates PrometheusRule alerts
+        │   └── NodeHighCPU, NodeHighMemory, PodNotRunning
+        │
+        └── Data source for Grafana
+                │
+                ├── AKS Cluster Health Dashboard
+                │   └── Running pods, CPU %, Memory %
+                │
+                └── Application Performance Dashboard
+                    └── Request rate, Error rate %, p95 latency
+```
 ----
 
 ## SRE Skills Demonstrated
@@ -92,27 +75,20 @@ up automatically by the Prometheus operator. No config file editing required.
 ---
 
 ## Project Structure
+
+```
 azure-aks-observability/
-
 ├── terraform/           # AKS cluster, ACR, Log Analytics, role assignments
-
 ├── k8s/
-
 │   ├── test-deployment.yaml      # nginx test workload
-
 │   ├── prometheus-rules.yaml     # PrometheusRule alerting rules
-
 │   └── metrics-app.yaml          # App deployment, service, ServiceMonitor
-
 ├── app/
-
 │   ├── app.py                    # FastAPI app with prometheus_client instrumentation
-
 │   └── Dockerfile
-
 ├── TROUBLESHOOTING.md            # Post-mortem style issue log
-
 └── README.md
+```
 
 ---
 
